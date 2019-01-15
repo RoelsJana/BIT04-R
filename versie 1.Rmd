@@ -1,0 +1,112 @@
+---
+title: "Assignment_JanaRoels"
+author: "Jana Roels"
+date: "14 januari 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# NASA Astronauts, 1959-2013
+This dataset was published by the National Aeronautics and Space Administration (NASA) as the "Astronaut Fact Book" (April 2013 edition). Active astronauts' mission names and flight statistics were updated from the NASA website.  
+The National Aeronautics and Space Administration (NASA) selected the first group of astronauts in 1959. Since then the requirements to become an astronaut have change a lot. There are currently 50 active astronauts and 35 management astronauts in the program; 196 astronauts have retired or resigned and 49 are deceased (as of April 2013).  
+Some inspiration questions where given including: 
+Which American astronaut has spent the most time in space? What university has produced the most astronauts? What subject did the most astronauts major in at college? Have most astronauts served in the military? Which branch? What rank did they achieve?   
+Some of these questions where chosen to examine, and some new questions were set up.  
+The dataset was found through the kaggle website in the following link: https://www.kaggle.com/nasa/astronaut-yearbook/home
+
+## Overview
+This document includes the analysis of:
+
+### The dataset
+The first 2 lines load the dataset. The dataset is observed through multiple commands. The dataset contains 357 rows (Astronauts) and 19 columns (Variables).  
+Changes to the dataset are needed before working with the data, changing the class to the propper type and replace the empty vanlues with NA if needed.
+```{r}
+setwd("~/HoWest/04 Data analysis, visualization and biostatistics using R/R/Opdracht")
+NASA <- read.csv(file = "astronauts.csv", header = TRUE)  
+#DOEN VIA GITHUB!! & URL !!
+dim(NASA)
+colnames(NASA)
+str(NASA)
+NASA$Name <- as.character(NASA$Name)
+NASA$Group <- as.factor(NASA$Group)
+NASA$Birth.Date <- as.Date(NASA$Birth.Date, format = "%m/%d/%Y")
+NASA$Birth.Place <- as.character(NASA$Birth.Place)
+NASA$Alma.Mater <- as.character(NASA$Alma.Mater)
+NASA$Undergraduate.Major <- as.character(NASA$Undergraduate.Major)
+NASA$Graduate.Major <- as.character(NASA$Graduate.Major)
+NASA$Military.Rank <- as.character(NASA$Military.Rank)
+NASA$Military.Branch <- as.character(NASA$Military.Branch)
+NASA$Missions <- as.character(NASA$Missions)
+NASA$Death.Date <- as.Date(NASA$Death.Date, format = "%m/%d/%Y")
+NASA$Death.Mission <- as.character(NASA$Death.Mission)
+summary(NASA)
+NASA$Military.Rank[nchar(NASA$Military.Rank)==0] <- NA
+NASA$Military.Branch[nchar(NASA$Military.Branch)==0] <- NA
+NASA$Death.Mission[nchar(NASA$Death.Mission)==0] <- NA
+NASA$Alma.Mater[nchar(NASA$Alma.Mater)==0] <- NA
+NASA$Undergraduate.Major[nchar(NASA$Undergraduate.Major)==0] <- NA
+NASA$Graduate.Major[nchar(NASA$Graduate.Major)==0] <- NA
+NASA$Missions[nchar(NASA$Missions)==0] <- NA
+
+```
+
+### Mission data
+For different missions a new group of astronauts was selected and given an unique number. Plotting the year against the group gives us an idea of the timing of the missions. The plot reveals 2 outliers (1984 and 1990), these where probably wrongly entered in the dataset since both the missions from these rows do not correspond to the missions performed by the other groupmembers.  
+From the dataset we can search which astronauts participated in specific misisons. As an example the first manned moonlanding is chosen (Apollo 11).
+```{r}
+library(ggplot2)
+ggplot(data = NASA,
+       aes(x = Year, 
+           y = Group,
+           label = Year)) + 
+  geom_point(shape = 21, fill = "#f44242", size = 2) +
+  labs(title = "Mission Year and Groups") + 
+  geom_text(check_overlap = TRUE, nudge_x = 2)+
+  theme_bw() +
+  theme(axis.text.x = element_text(size = 11), 
+        axis.title.x = element_text(size = 14),
+        axis.text.y = element_text(size = 11), 
+        axis.title.y = element_text(size = 14),
+        plot.title = element_text(size = 15))
+# Who was part of the moonlanding (Apollo 11)?
+grep("Apollo 11", NASA$Missions)
+NASA[c(5,15,78),1]
+```
+### Gender ratio among astronauts
+The first Female astronaut was employed in 1978, named Sally Ride, opening the way for multiple others starting from the same year. The fact that it took 19 years for the first female to become an astronaut is a first clue towards the ratio males/females as astronauts. The following commands visualise the difference in the amount of male and female astronauts. 
+```{r}
+library(gridExtra)
+
+Gender1 <- ggplot(NASA, 
+       aes(Gender)) + 
+        labs(title="Numeric", y="Frequency") +
+        theme_bw() + 
+        theme(axis.text.x = element_text(size = 10),
+              axis.title.x = element_text(size = 10),
+              axis.text.y = element_text(size = 10),
+              axis.title.y = element_text(size = 10),
+              plot.title = element_text(size = 11)) + 
+        geom_bar(fill=c("#4189f4", "#f44242"))
+Gender2<- ggplot(NASA,
+       aes(x = "", y="" ,fill=Gender, label=Gender) ) +
+        geom_bar(width = 1,stat="identity") +
+        coord_polar(theta = "y") + 
+        scale_fill_manual(values=c("#4189f4", "#f44242")) + 
+        labs(title="Percentage",x ="", y = "") +  
+        theme_bw() + 
+        theme(panel.grid  = element_blank(), panel.border = element_blank(),
+        plot.title = element_text(size = 11))
+grid.arrange(Gender1,Gender2, nrow = 1, top="Gender Ratio for astronauts")
+
+Gender <- table(NASA$Gender)
+gender.freq <- table(NASA$Gender)
+gender.relfreq <- gender.freq/nrow(NASA)
+gender.percentages <- gender.relfreq*100
+gender.percentages
+
+```
